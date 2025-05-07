@@ -31,12 +31,14 @@ class ProductController extends Controller
         ]);
 
         $entry = [
+            'id' => uniqid(),
             'name' => $validated['name'],
             'quantity' => $validated['quantity'],
             'price' => $validated['price'],
             'datetime' => now()->toDateTimeString(),
             'total' => $validated['quantity'] * $validated['price'],
         ];
+        
 
 
         $jsonPath = storage_path('app/products.json');
@@ -50,7 +52,7 @@ class ProductController extends Controller
     public function edit(Request $request)
 {
     $validated = $request->validate([
-        'index' => 'required|integer',
+        'id' => 'required|string',
         'name' => 'required|string|max:255',
         'quantity' => 'required|integer|min:0',
         'price' => 'required|numeric|min:0',
@@ -59,19 +61,21 @@ class ProductController extends Controller
     $jsonPath = storage_path('app/products.json');
     $products = File::exists($jsonPath) ? json_decode(File::get($jsonPath), true) : [];
 
-    if (!isset($products[$validated['index']])) {
-        return response()->json(['error' => 'Invalid index'], 400);
+    foreach ($products as &$product) {
+        if ($product['id'] === $validated['id']) {
+            $product['name'] = $validated['name'];
+            $product['quantity'] = $validated['quantity'];
+            $product['price'] = $validated['price'];
+            $product['total'] = $validated['quantity'] * $validated['price'];
+            break;
+        }
     }
-
-    $products[$validated['index']]['name'] = $validated['name'];
-    $products[$validated['index']]['quantity'] = $validated['quantity'];
-    $products[$validated['index']]['price'] = $validated['price'];
-    $products[$validated['index']]['total'] = $validated['quantity'] * $validated['price'];
 
     File::put($jsonPath, json_encode($products, JSON_PRETTY_PRINT));
 
     return response()->json(['success' => true]);
 }
+
 
 
 }

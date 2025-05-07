@@ -42,7 +42,7 @@
             </tr>
         </thead>
         <tbody id="product-table">
-        @foreach($products as $index => $p)
+        @foreach($products as $p)
             <tr>
                 <td>{{ $p['name'] }}</td>
                 <td>{{ $p['quantity'] }}</td>
@@ -50,10 +50,11 @@
                 <td>{{ $p['datetime'] }}</td>
                 <td>{{ number_format($p['total'], 2) }}</td>
                 <td>
-                    <button class="btn btn-sm btn-warning" onclick="openEditModal({{ $index }})">Edit</button>
+                    <button class="btn btn-sm btn-warning" onclick="openEditModal('{{ $p['id'] }}')">Edit</button>
                 </td>
             </tr>
         @endforeach
+
             <tr class="table-secondary fw-bold">
                 <td colspan="4" class="text-end">Total Sum</td>
                 <td>{{ number_format($totalSum, 2) }}</td>
@@ -69,7 +70,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                  <input type="hidden" id="edit-index">
+                  <input type="hidden" id="edit-id">
                   <div class="mb-3">
                       <label class="form-label">Product Name</label>
                       <input type="text" id="edit-name" class="form-control" required>
@@ -121,19 +122,20 @@
     const products = @json($products);
     const modal = new bootstrap.Modal(document.getElementById('editModal'));
 
-    function openEditModal(index) {
-        const p = products[index];
-        document.getElementById('edit-index').value = index;
-        document.getElementById('edit-name').value = p.name;
-        document.getElementById('edit-quantity').value = p.quantity;
-        document.getElementById('edit-price').value = p.price;
-        modal.show();
-    }
+    function openEditModal(id) {
+            const p = products.find(item => item.id === id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = p.name;
+            document.getElementById('edit-quantity').value = p.quantity;
+            document.getElementById('edit-price').value = p.price;
+            modal.show();
+        }
+
 
     document.getElementById('edit-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        const index = document.getElementById('edit-index').value;
+        const id = document.getElementById('edit-id').value;
         const name = document.getElementById('edit-name').value;
         const quantity = document.getElementById('edit-quantity').value;
         const price = document.getElementById('edit-price').value;
@@ -146,7 +148,7 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrf
             },
-            body: JSON.stringify({ index, name, quantity, price })
+            body: JSON.stringify({ id, name, quantity, price })
         });
 
         if (response.ok) {
